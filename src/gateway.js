@@ -4,36 +4,42 @@ import EventEmitter from './emitter';
 const EXPECTED_CLOSE = 1000;
 
 class Gateway extends EventEmitter {
-    constructor({url}){
+    constructor({url, engine}){
         super();
         this._url = url;
         this._ws = null;
         this._reconnect = true;
+        this._is_open = false;
+        this._engine = engine || global.WebSocket;
     }
-
     open(){
-        return new Promise(async (resolve, reject) => {
-            this._ws = new WebSocket(this.url);
-            this._ws.onopen = () => {
-                this.emit('websocket_open');
-                resolve();
-            }
-            this._ws.onclose = (event) => {
-                const { code } = event;
-                this.clear(event);
-                if(code !== EXPECTED_CLOSE)
-                    this.reconnect();
-            }
-            this._ws.onerror = (err) => {
-                this.emit('websocket_error', err);
+        return new Promise((resolve, reject) => {
+            try{
+                this._ws = new this._engine(this._url);
+                this._ws.onopen = () => {
+                    this.emit('websocket_open');
+                    this._is_open = true;
+                    resolve();
+                }
+                this._ws.onclose = (event) => {
+                    const { code } = event;
+                    this.clear(event);
+                    if(code !== EXPECTED_CLOSE)
+                        this.reconnect();
+                }
+                this._ws.onerror = (err) => {
+                    this.emit('websocket_error', err);
+                    reject(err);
+                }
+                this._ws.onmessage = (event) => {
+                    var {type, id, payload} = JSON.parse(event.data);
+                    if(id !== undefined)
+                        this.emit(type, id, payload);
+                    else
+                        this.emit(type, payload)
+                }
+            }catch(err){
                 reject(err);
-            }
-            this._ws.onmessage = (event) => {
-                var message = JSON.parse(event.data);
-                var event_name = message.event;
-                var data = message.data;
-                if(_.isFunction(this[event_name]))
-                    this[event_name].call(this, data)
             }
         });
     }
@@ -67,7 +73,25 @@ class Gateway extends EventEmitter {
     }
     clear(event){
         this.emit('websocket_close', event);
+        this._is_open = false;
         this._ws = null;
+    }
+    send(message){
+        // make sure the message is a string
+        if(typeof message === 'object')
+            message = JSON.stringify(message)
+        // return a promise object to signal message was sent or not
+        return new Promise((resolve, reject) => {
+            if(this._ws === null || !this.is_open)
+                reject('Websocket is not open');
+            else{
+                this._ws.send(message);
+                resolve();
+            }
+        });
+    }
+    get is_open(){
+        return this._is_open;
     }
 }
 
