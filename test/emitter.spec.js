@@ -1,7 +1,7 @@
 
 import chai from 'chai';
 import sinon from 'sinon';
-import { EventEmitter } from '../lib/tbone.js';
+import { EventEmitter } from '../src';
 
 let emitter, spy;
 

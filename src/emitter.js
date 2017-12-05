@@ -20,7 +20,9 @@ class EventEmitter {
         this.on(event, foo);
     }
     off(event, listener){
-        if(this._events.has(event)) {
+        if(event===undefined) // remove all event listeners to all events
+            this._events.clear()
+        else if(this._events.has(event)) {
             if(listener)
                 this._events.get(event).delete(listener)
             else

@@ -1,8 +1,8 @@
-import { client, initialize } from 'tbone'; 
 import EventEmitter from './emitter';
 import Gateway from './gateway';
+import Resource from './resource';
 
-export { Gateway, EventEmitter };
+export { Resource, Gateway, EventEmitter };
 
 // var TBone = {
 //     initialize : initialize,
