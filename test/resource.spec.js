@@ -22,52 +22,48 @@ class ApiServer extends Server {
             }            
         });
     }
-    handle_request(data) {
-        if(data.method=='GET'){
-            if(data.args && data.args.response == false)
-                return;
-            this.send_response(data.id, {
-                first_name: 'Ron',
-                last_name: 'Burgundy'
-            });
-        }else if(data.method=='POST')
-            this.send_response(data.id, data.body)
-    }
-    send_response(id, data){
+    send_response(key, status, data){
         this.send(
             JSON.stringify({
                 type: 'response',
-                id: id,
+                key: key,
+                status: status,
                 payload: data
             })
         );    
     }
 }
 
-describe('Given a socket server and a gateway', () => {
-    before( async () => {
-        return new Promise((resolve, reject) => {
-            // create websocket server to provide responses             
-            socket_server = new ApiServer(SOCKET_URL); 
-            // create websocket client gateway
-            gateway = new Gateway({
-                url: SOCKET_URL,
-                engine: WebSocket
-            });
-            gateway.open().then(() =>{
-                // create resource for some uri
-                resource = new Resource('/api/person/', gateway, 500);    
-                resolve('Gateway is open and ready');           
-            }).catch((event) => {
-                reject(event.data);
-            });
-        });
+let init = async (server_class) => {
+    socket_server = new server_class(SOCKET_URL); 
+    // create websocket client gateway
+    gateway = new Gateway({
+        url: SOCKET_URL,
+        engine: WebSocket
     });
-    describe('after resource is initialized', ()=> {
+    await gateway.open();
+    resource = new Resource('/api/person/', gateway, 500);  
+}
+
+describe('Given a socket server and a gateway', () => {
+    afterEach(()=>{
+        socket_server.stop();
+        socket_server.close();
+    }) 
+    describe('after resource is initialized', async ()=> {
         it('should receive a response when a GET request with no params is sent', async () => {
+            await init(class extends ApiServer {
+                handle_request(data) {
+                    this.send_response(data.key, 200, {
+                        first_name: 'Ron',
+                        last_name: 'Burgundy'
+                    });
+                }
+            });
             return new Promise((resolve, reject) => {
                 resource.get().then((response) => {
-                    expect(response).to.include({
+                    expect(response.status).to.equal(200);
+                    expect(response.payload).to.include({
                         first_name: 'Ron',
                         last_name: 'Burgundy'
                     })
@@ -77,14 +73,55 @@ describe('Given a socket server and a gateway', () => {
                 });               
             });
         })
-        it('Should receive a timeout for a request that does not respond', async () => {
+        it('Should receive a timeout for a GET request that does not respond', async () => {
+            await init(class extends ApiServer {
+                handle_request(data) {}
+            });
             return new Promise((resolve, reject) => {
-                resource.get({response: false})
-                    .then((response)=> reject(new Error('response received')))
-                    .catch((err) => {
-                        expect(err.message).to.equal('Request timeout');
-                        resolve();
+                resource
+                .get()
+                .then((response)=> reject(new Error('response received')))
+                .catch((err) => {
+                    expect(err.message).to.equal('Request timeout');
+                    resolve();
                 });   
+            });
+        })
+        it('Should receive a response to a POST request, bearing the payload that was posted', async () => {
+            await init(class extends ApiServer {
+                handle_request(data) {
+                    this.send_response(data.key, 201, data.body);
+                }
+            });
+            return new Promise((resolve, reject) => {
+                resource.post({}, {
+                    first_name: 'Ron',
+                    last_name: 'Burgundy'      
+                }).then((response) => {
+                    expect(response.status).to.equal(201);
+                    expect(response.payload).to.include({
+                        first_name: 'Ron',
+                        last_name: 'Burgundy'
+                    });
+                    resolve();
+                }).catch((err) => {
+                    reject( new Error(err));
+                });    
+            });
+        })
+        it('Should receive a 404 not-found for an invalid resource', async () => {
+            await init(class extends ApiServer {
+                handle_request(data) {
+                    this.send_response(data.key, 404, {});
+                }
+            });
+            return new Promise((resolve, reject) => {
+                resource.get().then((response)=> {
+                    expect(response.status).to.equal(404);
+                    resolve();
+                }).catch((err) => {
+                    reject( new Error(err));
+                }); 
             });
         });
     })
