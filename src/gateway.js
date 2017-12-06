@@ -32,9 +32,9 @@ class Gateway extends EventEmitter {
                     reject(err);
                 }
                 this._ws.onmessage = (event) => {
-                    var {type, id, payload} = JSON.parse(event.data);
-                    if(id !== undefined)
-                        this.emit(type, id, payload);
+                    var {type, key, status, payload} = JSON.parse(event.data);
+                    if(key !== undefined)
+                        this.emit(type, key, status, payload);
                     else
                         this.emit(type, payload)
                 }
