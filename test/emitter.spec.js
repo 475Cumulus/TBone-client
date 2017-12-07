@@ -1,7 +1,7 @@
 
 import chai from 'chai';
 import sinon from 'sinon';
-import { EventEmitter } from '../src';
+import EventEmitter from '../src/emitter';
 
 let emitter, spy;
 

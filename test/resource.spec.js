@@ -1,7 +1,8 @@
 import chai, { expect } from 'chai';
 import sinon from 'sinon';
 import { WebSocket, Server } from 'mock-socket';
-import { Gateway, Resource } from '../src';
+import Gateway from '../src/gateway';
+import Resource from '../src/resource';
 
 
 chai.should();
@@ -37,6 +38,7 @@ class ApiServer extends Server {
 let init = async (server_class) => {
     socket_server = new server_class(SOCKET_URL); 
     // create websocket client gateway
+    debugger;
     gateway = new Gateway({
         url: SOCKET_URL,
         engine: WebSocket

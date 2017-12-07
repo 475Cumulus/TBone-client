@@ -1,7 +1,7 @@
-import chai, {expect } from 'chai';
+import chai, { expect } from 'chai';
 import sinon from 'sinon';
 import { WebSocket, Server } from 'mock-socket';
-import { Gateway } from '../src';
+import Gateway from '../src/gateway';
 
 chai.should();
 
@@ -30,6 +30,7 @@ describe('Given an instance of gateway', () => {
         it('should open a websocket and resolve promise', async () => {
             return new Promise((resolve) => {
                 gateway.open().then(() => {
+                    expect(gateway.is_open).to.equal(true);
                     resolve('Websocket opened');
                 });                
             });

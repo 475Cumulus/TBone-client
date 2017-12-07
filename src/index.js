@@ -1,12 +1,24 @@
-import EventEmitter from './emitter';
 import Gateway from './gateway';
-import Resource from './resource';
+import Resource from './resource'; 
 
-export { Resource, Gateway, EventEmitter };
+class TBone {
+    constructor(){
+        this._gateway = null;
+    }
+    get gateway(){
+        return this._gateway;
+    }
+    initialize({uri}){
+        this._gateway = new Gateway(uri);
 
-// var TBone = {
-//     initialize : initialize,
-//     client: client
-// }
+        // load token from local storage
+    }
+    resource(uri){
+        return new Resource(uri, _gateway);
+    }
+    authenticate(data){
 
-// export default TBone;
+    }
+}
+
+export default tbone = new TBone();
