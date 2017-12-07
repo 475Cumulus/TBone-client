@@ -38,13 +38,12 @@ class ApiServer extends Server {
 let init = async (server_class) => {
     socket_server = new server_class(SOCKET_URL); 
     // create websocket client gateway
-    debugger;
     gateway = new Gateway({
         url: SOCKET_URL,
         engine: WebSocket
     });
     await gateway.open();
-    resource = new Resource('/api/person/', gateway, 500);  
+    resource = new Resource('/api/person/', gateway, {}, 500);  
 }
 
 describe('Given a socket server and a gateway', () => {
@@ -119,10 +118,10 @@ describe('Given a socket server and a gateway', () => {
             });
             return new Promise((resolve, reject) => {
                 resource.get().then((response)=> {
-                    expect(response.status).to.equal(404);
-                    resolve();
+                    reject( new Error('Request should fail with 404'));
                 }).catch((err) => {
-                    reject( new Error(err));
+                    expect(err.status).to.equal(404);
+                    resolve();
                 }); 
             });
         });

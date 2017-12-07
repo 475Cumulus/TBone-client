@@ -14,6 +14,8 @@ class Gateway extends EventEmitter {
     }
     open(){
         return new Promise((resolve, reject) => {
+            if(this.is_open)
+                resolve();
             try{
                 this._ws = new this._engine(this._url);
                 this._ws.onopen = () => {
