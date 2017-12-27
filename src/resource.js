@@ -82,6 +82,7 @@ class Resource extends EventEmitter {
             this._gateway.on('response', foo);
             this._gateway.send(JSON.stringify(req)).catch(err => reject(err)); 
             timeout_handle = setTimeout(()=> {
+                this._gateway.off('response', foo);
                 reject(new Error('Request timeout'))
             }, this._timeout);               
 

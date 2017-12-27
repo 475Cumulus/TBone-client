@@ -30,7 +30,7 @@ describe('Given an instance of gateway', () => {
         it('should open a websocket and resolve promise', async () => {
             return new Promise((resolve) => {
                 gateway.open().then(() => {
-                    expect(gateway.is_open).to.equal(true);
+                    expect(gateway.isOpen).to.equal(true);
                     resolve('Websocket opened');
                 });                
             });
@@ -46,7 +46,6 @@ describe('Given an instance of gateway', () => {
         })
         it('should get an echo reply from server after gateway sends message', async () => {
             const msg = "I'm kind of a big deal";
-
             return new Promise((resolve, reject ) => {
                 gateway.open().then(async () => {
                     gateway.on('echo', (data) => {
@@ -57,6 +56,11 @@ describe('Given an instance of gateway', () => {
                     gateway.send(msg);
                 });
             });
+        })
+        it('should manage to send multiple requests simultaneously', async() => {
+            await gateway.open();
+            await gateway.send('one two three');
+            await gateway.send('four five six');
         })
     })
     after(()=> {

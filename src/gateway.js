@@ -14,7 +14,7 @@ class Gateway extends EventEmitter {
     }
     open(){
         return new Promise((resolve, reject) => {
-            if(this.is_open)
+            if(this.isOpen)
                 resolve();
             try{
                 this._ws = new this._engine(this._url);
@@ -84,16 +84,27 @@ class Gateway extends EventEmitter {
             message = JSON.stringify(message)
         // return a promise object to signal message was sent or not
         return new Promise((resolve, reject) => {
-            if(this._ws === null || !this.is_open)
+            if(!this.isOpen)
                 reject('Websocket is not open');
-            else{
-                this._ws.send(message);
-                resolve();
+            else{ // we queue the call to send in case the socket flips to 'connecting'
+                let Q = () => {
+                    setTimeout(()=>{
+                        if(this._ws.readyState === 1){
+                            this._ws.send(message);
+                            resolve();
+                        }
+                        else
+                            Q();                            
+                    }, 5);
+                }
+                Q();
             }
         });
     }
-    get is_open(){
-        return this._is_open;
+    get isOpen(){
+        if(this._ws)
+            return this._is_open;
+        return false;
     }
 }
 
