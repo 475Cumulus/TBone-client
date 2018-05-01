@@ -11,6 +11,7 @@ class Gateway extends EventEmitter {
         this._reconnect = true;
         this._is_open = false;
         this._engine = engine || global.WebSocket;
+        this._id = Math.random();
     }
     open(){
         return new Promise((resolve, reject) => {
@@ -19,7 +20,7 @@ class Gateway extends EventEmitter {
             try{
                 this._ws = new this._engine(this._url);
                 this._ws.onopen = () => {
-                    this.emit('websocket_open');
+                    this.emit('websocket_open', this._id);
                     this._is_open = true;
                     resolve();
                 }

@@ -57,11 +57,11 @@ describe('Given an instance of gateway', () => {
                 });
             });
         })
-        it('should manage to send multiple requests simultaneously', async() => {
-            await gateway.open();
-            await gateway.send('one two three');
-            await gateway.send('four five six');
-        })
+        // it('should manage to send multiple requests simultaneously', async() => {
+        //     await gateway.open();
+        //     await gateway.send('one two three');
+        //     await gateway.send('four five six');
+        // })
     })
     after(()=> {
         socket_server.stop();
